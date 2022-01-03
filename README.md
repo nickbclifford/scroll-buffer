@@ -1,5 +1,11 @@
 # scroll-buffer
+[![Cargo](https://github.com/nickbclifford/scroll-buffer/actions/workflows/cargo.yml/badge.svg)](https://github.com/nickbclifford/scroll-buffer/actions/workflows/cargo.yml)
+![Crates.io](https://img.shields.io/crates/v/scroll-buffer)
+
 Additional `Pwrite` buffers for use with [Scroll](https://github.com/m4b/scroll).
+
+## Documentation
+Docs are available at [docs.rs](https://docs.rs/scroll-buffer/0.1.0/scroll_buffer/).
 
 ## Overview
 Since Scroll's writing traits are generic over their destination buffer, if you find
