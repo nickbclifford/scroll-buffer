@@ -6,6 +6,7 @@ authors = ["Nick Clifford <nick@nickclifford.me>"]
 repository = "https://github.com/nickbclifford/scroll-buffer"
 keywords = ["scroll", "pwrite", "dynamic", "buffer", "expand"]
 license = "MIT"
+description = "Extra writable buffers for Scroll"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
