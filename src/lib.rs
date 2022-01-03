@@ -1,7 +1,8 @@
 use scroll::{Endian, Pwrite, ctx::TryIntoCtx};
-use core::ops::{Index, IndexMut};
+use std::ops::{Index, IndexMut};
 
 /// A buffer designed for `Pwrite` that dynamically expands to hold all types written into it.
+/// Uses a standard `Vec` under the hood.
 ///
 /// # Use Cases
 ///
@@ -87,11 +88,35 @@ impl DynamicBuffer {
     ///
     /// let mut buf = DynamicBuffer::new();
     ///
+    /// assert_eq!(buf.get(), []);
     /// buf.pwrite_with(2u32, 0, LE).unwrap();
     /// assert_eq!(buf.get(), [2, 0, 0, 0]);
     /// ```
     pub fn get(&self) -> &[u8] {
-        &self.buffer[..=self.write_end]
+        &self.buffer[..self.write_end]
+    }
+
+    /// Resets the buffer's contents. Maintains already allocated capacity.
+    /// ```rust
+    /// use scroll::{LE, Pwrite};
+    /// use scroll_buffer::DynamicBuffer;
+    ///
+    /// let mut buf = DynamicBuffer::new();
+    ///
+    /// buf.pwrite_with(2u16, 0, LE).unwrap();
+    /// assert_eq!(buf.get(), [2, 0]);
+    ///
+    /// buf.clear();
+    /// assert_eq!(buf.get(), []);
+    ///
+    /// // does not reallocate!
+    /// buf.pwrite_with(0xffu8, 0, LE).unwrap();
+    /// assert_eq!(buf.get(), [0xff]);
+    /// ```
+    pub fn clear(&mut self) {
+        self.buffer.clear();
+        self.start_offset = 0;
+        self.write_end = 0;
     }
 }
 
@@ -108,10 +133,10 @@ impl IndexMut<usize> for DynamicBuffer {
 
         if let Some(diff) = index.checked_sub(self.buffer.len()) {
             self.buffer
-                .extend(core::iter::repeat(0).take(core::cmp::max(self.alloc_increment, diff + 1)));
+                .extend(std::iter::repeat(0).take(std::cmp::max(self.alloc_increment, diff + 1)));
         }
 
-        self.write_end = self.write_end.max(index);
+        self.write_end = self.write_end.max(index + 1);
 
         self.buffer.index_mut(index)
     }
@@ -154,7 +179,7 @@ macro_rules! num_impl {
                     buf[index] = byte;
                 }
 
-                Ok(core::mem::size_of::<Self>())
+                Ok(std::mem::size_of::<Self>())
             }
         }
 
@@ -291,3 +316,6 @@ mod tests {
         assert_eq!(buf.get(), [0xba, 0xbe, 0xca, 0xfe]);
     }
 }
+
+#[cfg(doctest)]
+doc_comment::doctest!("../README.md");
