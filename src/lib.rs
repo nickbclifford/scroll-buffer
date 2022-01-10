@@ -1,5 +1,5 @@
 use scroll::{Endian, Pwrite, ctx::TryIntoCtx};
-use std::ops::{Index, IndexMut};
+use std::ops::*;
 
 /// A buffer designed for `Pwrite` that dynamically expands to hold all types written into it.
 /// Uses a standard `Vec` under the hood.
@@ -59,9 +59,9 @@ use std::ops::{Index, IndexMut};
 /// However, if your `TryIntoCtx` impls don't use any special slice APIs and just use `Pwrite` and/or
 /// basic indexing, it's extremely easy to migrate! Just add the `DynamicBuffer` generic type.
 pub struct DynamicBuffer {
-    buffer: Vec<u8>,
+    pub(crate) buffer: Vec<u8>,
     alloc_increment: usize,
-    start_offset: usize,
+    pub(crate) start_offset: usize,
     write_end: usize,
 }
 
@@ -159,27 +159,39 @@ impl<Ctx: Copy, E> Pwrite<Ctx, E> for DynamicBuffer {
     }
 }
 
+impl TryIntoCtx<(), DynamicBuffer> for &'_ [u8] {
+    type Error = scroll::Error; // doesn't matter, this is infallible
+
+    fn try_into_ctx(self, into: &mut DynamicBuffer, _: ()) -> Result<usize, Self::Error> {
+        let len = self.len();
+
+        // set final byte to 0
+        // if the buffer is not large enough, this will automatically allocate through IndexMut
+        into[len - 1] = 0;
+
+        // the following range is now guaranteed to be valid
+        // TODO: should consumers have this kind of IndexMut<Range> access?
+        into.buffer[into.start_offset..into.start_offset + len].copy_from_slice(self);
+
+        Ok(len)
+    }
+}
+
 macro_rules! num_impl {
     ($t:ty) => {
         impl TryIntoCtx<scroll::Endian, DynamicBuffer> for $t {
-            type Error = scroll::Error; // doesn't matter, this is infallible
+            type Error = scroll::Error; // also infallible
 
             fn try_into_ctx(
                 self,
                 buf: &mut DynamicBuffer,
                 ctx: Endian,
             ) -> Result<usize, Self::Error> {
-                for (index, byte) in IntoIterator::into_iter(if ctx.is_little() {
+                (&if ctx.is_little() {
                     self.to_le_bytes()
                 } else {
                     self.to_be_bytes()
-                })
-                .enumerate()
-                {
-                    buf[index] = byte;
-                }
-
-                Ok(std::mem::size_of::<Self>())
+                }).try_into_ctx(buf, ())
             }
         }
 
@@ -240,6 +252,17 @@ mod tests {
         buf.pwrite_with(0x1234u16, 2, Endian::Big).unwrap();
 
         assert_eq!(buf.get(), [0, 0, 0x12, 0x34]);
+    }
+
+    #[test]
+    fn slice_write() {
+        let mut buf = DynamicBuffer::new();
+
+        buf.pwrite([1u8; 4].as_slice(), 0).unwrap();
+        assert_eq!(buf.get(), [1, 1, 1, 1]);
+
+        buf.pwrite([2u8; 2].as_slice(), 2).unwrap();
+        assert_eq!(buf.get(), [1, 1, 2, 2]);
     }
 
     #[test]
