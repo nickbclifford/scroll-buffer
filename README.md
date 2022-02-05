@@ -19,7 +19,7 @@ grows on-demand when writing types into it.
 Add to your `Cargo.toml`:
 ```toml
 [dependencies]
-scroll-buffer = "0.2.0"
+scroll-buffer = "0.3.0"
 ```
 
 You can now change your `TryIntoCtx` implementations and start writing!

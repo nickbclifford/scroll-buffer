@@ -96,6 +96,21 @@ impl DynamicBuffer {
         &self.buffer[..self.write_end]
     }
 
+    /// Consumes the buffer and returns everything written to it, discarding any excess allocated zeroes.
+    /// ```rust
+    /// use scroll::{LE, Pwrite};
+    /// use scroll_buffer::DynamicBuffer;
+    ///
+    /// let mut buf = DynamicBuffer::with_increment(8);
+    /// buf.pwrite_with(2u32, 0, LE).unwrap();
+    ///
+    /// assert_eq!(buf.into_vec(), vec![2, 0, 0, 0]);
+    /// ```
+    pub fn into_vec(mut self) -> Vec<u8> {
+        self.buffer.truncate(self.write_end);
+        self.buffer
+    }
+
     /// Resets the buffer's contents. Maintains already allocated capacity.
     /// ```rust
     /// use scroll::{LE, Pwrite};
