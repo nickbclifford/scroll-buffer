@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Formatter};
 use scroll::{Endian, Pwrite, ctx::TryIntoCtx};
 use std::ops::*;
 
@@ -132,6 +133,12 @@ impl DynamicBuffer {
         self.buffer.clear();
         self.start_offset = 0;
         self.write_end = 0;
+    }
+}
+
+impl Debug for DynamicBuffer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.get(), f)
     }
 }
 
