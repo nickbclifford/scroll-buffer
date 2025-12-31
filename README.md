@@ -5,7 +5,7 @@
 Additional `Pwrite` buffers for use with [Scroll](https://github.com/m4b/scroll).
 
 ## Documentation
-Docs are available at [docs.rs](https://docs.rs/scroll-buffer/0.2.0/scroll_buffer/).
+Docs are available at [docs.rs](https://docs.rs/scroll-buffer/0.3.2/scroll_buffer/).
 
 ## Overview
 Since Scroll's writing traits are generic over their destination buffer, if you find
@@ -19,7 +19,7 @@ grows on-demand when writing types into it.
 Add to your `Cargo.toml`:
 ```toml
 [dependencies]
-scroll-buffer = "0.3.0"
+scroll-buffer = "0.3.2"
 ```
 
 You can now change your `TryIntoCtx` implementations and start writing!
