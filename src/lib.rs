@@ -209,11 +209,12 @@ macro_rules! num_impl {
                 buf: &mut DynamicBuffer,
                 ctx: Endian,
             ) -> Result<usize, Self::Error> {
-                (&if ctx.is_little() {
+                let bytes = if ctx.is_little() {
                     self.to_le_bytes()
                 } else {
                     self.to_be_bytes()
-                }).try_into_ctx(buf, ())
+                };
+                TryIntoCtx::try_into_ctx(&bytes[..], buf, ())
             }
         }
 
